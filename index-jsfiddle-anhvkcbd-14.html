@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PEANUT - Écosystème Connecté</title>
+
+  <style>
+    :root { 
+    --accent: #6c5ce7; 
+    --bg: #0f0c29; 
+    --text: #ffffff;
+}
+
+body { 
+    margin: 0; 
+    font-family: 'Outfit', sans-serif; 
+    background: radial-gradient(circle at top, #302b63, #0f0c29); 
+    color: var(--text); 
+    height: 100vh; 
+    overflow: hidden; 
+}
+
+.hidden { display: none !important; }
+
+.glass { 
+    background: rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(12px); 
+    border: 1px solid rgba(255,255,255,0.2); 
+    border-radius: 20px; 
+    padding: 25px; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4); 
+}
+
+.auth-screen { 
+    height: 100vh; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+.login-card { width: 350px; text-align: center; }
+
+input, select, textarea, button { 
+    width: 100%; 
+    padding: 14px; 
+    margin: 10px 0; 
+    border-radius: 12px; 
+    border: none; 
+    box-sizing: border-box; 
+    font-family: inherit;
+}
+
+input { background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); }
+
+button { 
+    background: var(--accent); 
+    color: white; 
+    cursor: pointer; 
+    font-weight: 800; 
+    transition: 0.3s; 
+}
+
+button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4); }
+
+.layout { display: flex; height: 100vh; }
+
+.sidebar { 
+    width: 260px; 
+    background: rgba(0,0,0,0.6); 
+    padding: 30px; 
+    display: flex; 
+    flex-direction: column; 
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.main-content { flex: 1; padding: 40px; overflow-y: auto; }
+
+.edt-table { width: 100%; border-collapse: separate; border-spacing: 8px; }
+.edt-table td { 
+    background: rgba(255,255,255,0.05); 
+    border-radius: 12px; 
+    height: 70px; 
+    text-align: center; 
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.badge-role { 
+    background: var(--accent); 
+    padding: 5px 15px; 
+    border-radius: 20px; 
+    font-size: 11px; 
+    display: inline-block; 
+    margin-bottom: 10px;
+}
+
+.modal { 
+    position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.85); 
+    display: flex; align-items: center; justify-content: center; 
+}
+
+.dev-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; min-height: 50px; }
+  </style>
+
+  
+</head>
+<body>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <div id="login-page" class="auth-screen">
+        <div class="glass login-card">
+            <h1 style="font-size: 40px; margin: 0;">🥜 PEANUT</h1>
+            <p style="opacity: 0.6; margin-bottom: 30px;">Connecté au Cloud Universel</p>
+            
+            <input type="text" id="login-id" placeholder="Identifiant">
+            <input type="password" id="login-pass" placeholder="Mot de passe">
+            
+            <select id="login-role">
+                <option value="eleve">Espace Élève</option>
+                <option value="prof">Espace Professeur</option>
+                <option value="admin">Administration</option>
+            </select>
+            
+            <button id="btn-entrer">Se connecter</button>
+        </div>
+    </div>
+
+    <div id="app-interface" class="layout hidden">
+        <aside class="sidebar">
+            <div class="badge-role" id="display-role">Role</div>
+            <h2 id="display-name" style="margin-top: 0;">Utilisateur</h2>
+            
+            <nav style="margin-top: 40px; flex: 1;">
+                <button onclick="changeTab('edt')" style="background: rgba(255,255,255,0.1); text-align: left;">📅 Emploi du Temps</button>
+                <button onclick="changeTab('admin')" id="menu-admin" class="hidden" style="background: #e67e22; text-align: left;">⚙️ Gestion Universelle</button>
+            </nav>
+
+            <button onclick="location.reload()" style="background: #ff4757;">🚪 Déconnexion</button>
+        </aside>
+
+        <main class="main-content">
+            <section id="sect-edt">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>Emploi du Temps</h1>
+                    <div id="sync-indicator" style="font-size: 12px; opacity: 0.5;">● Synchronisé Cloud</div>
+                </div>
+                
+                <table class="edt-table">
+                    <thead>
+                        <tr><th>Heure</th><th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th></tr>
+                    </thead>
+                    <tbody id="edt-body"></tbody>
+                </table>
+            </section>
+
+            <section id="sect-admin" class="hidden">
+                <h1>⚙️ Administration Cloud</h1>
+                <div class="glass">
+                    <h3>Créer un compte valide partout</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input type="text" id="new-user-id" placeholder="ID (ex: Jean.D)">
+                        <input type="text" id="new-user-pass" placeholder="Mot de passe">
+                    </div>
+                    <select id="new-user-role">
+                        <option value="eleve">Élève</option>
+                        <option value="prof">Professeur</option>
+                    </select>
+                    <input type="text" id="new-user-classe" placeholder="Classe (ex: 3ème A)">
+                    <button id="btn-create-user">Enregistrer le compte</button>
+                </div>
+
+                <div id="users-cloud-list" style="margin-top: 30px;">
+                    <h3>Utilisateurs sur le serveur</h3>
+                    </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal-cours" class="modal hidden">
+        <div class="glass modal-content">
+            <h2 id="modal-title" style="margin-top: 0;">Cours</h2>
+            
+            <div id="edit-mode" class="hidden">
+                <input type="text" id="field-mat" placeholder="Matière">
+                <input type="text" id="field-classe" placeholder="Classe">
+                <p style="margin-top: 20px; font-weight: bold;">📝 Travail à faire :</p>
+                <textarea id="field-dev" placeholder="Inscrire les devoirs ici..."></textarea>
+                <button id="btn-save-slot">Sauvegarder pour tous</button>
+            </div>
+
+            <div id="view-mode" class="hidden">
+                <p style="opacity: 0.6;">Devoirs enregistrés :</p>
+                <div id="display-dev" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; min-height: 50px;"></div>
+            </div>
+
+            <button onclick="closeModal()" style="background: rgba(255,255,255,0.1); margin-top: 15px;">Fermer</button>
+        </div>
+    </div>
+
+  <script>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyD5WitiWnBGIAoc39aIjwbvm8LAZFX5Bbo",
+    authDomain: "peanut-system.firebaseapp.com",
+    projectId: "peanut-system",
+    databaseURL: "https://peanut-system-default-rtdb.firebaseio.com",
+    storageBucket: "peanut-system.firebasestorage.app",
+    messagingSenderId: "986910658914",
+    appId: "1:986910658914:web:b1fa1b728e6511e9189c3b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let userSession = null;
+let selectedSlot = null;
+
+// --- CONNEXION ---
+document.getElementById('login-btn').onclick = async () => {
+    const id = document.getElementById('login-id').value;
+    const ps = document.getElementById('login-pass').value;
+    const rl = document.getElementById('login-role').value;
+
+    if(id === "Enzo.techer" && ps === "Techer1234") {
+        launchApp({id, role: "admin"});
+        return;
+    }
+
+    const snapshot = await get(child(ref(db), `users`));
+    if (snapshot.exists()) {
+        const users = snapshot.val();
+        let found = Object.values(users).find(u => u.id === id && u.pass === ps && u.role === rl);
+        if(found) launchApp(found);
+        else alert("Erreur d'identifiants");
+    }
+};
+
+function launchApp(user) {
+    userSession = user;
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('app-interface').classList.remove('hidden');
+    document.getElementById('display-name').innerText = user.id;
+    document.getElementById('display-role').innerText = user.role;
+    if(user.role === 'admin') document.getElementById('btn-admin-ui').classList.remove('hidden');
+    syncEDT();
+}
+
+// --- ADMIN : CRÉER COMPTE ---
+document.getElementById('create-user-btn').onclick = () => {
+    const id = document.getElementById('new-user-id').value;
+    const pass = document.getElementById('new-user-pass').value;
+    const role = document.getElementById('new-user-role').value;
+    push(ref(db, 'users'), { id, pass, role });
+    alert("Compte créé sur le Cloud !");
+};
+
+// --- EMPLOI DU TEMPS ---
+function syncEDT() {
+    onValue(ref(db, 'edt'), (snap) => {
+        const data = snap.val() || {};
+        const hours = ["8h", "10h", "13h", "15h"];
+        const days = ["Lun", "Mar", "Mer", "Jeu", "Ven"];
+        let html = "";
+        hours.forEach(h => {
+            html += `<tr><td style="font-weight:bold">${h}</td>`;
+            days.forEach(d => {
+                const key = `${d}-${h}`;
+                const cours = data[key] || { mat: "-", cl: "" };
+                html += `<td onclick="openSlot('${key}')"><b>${cours.mat}</b><br>${cours.cl}</td>`;
+            });
+            html += `</tr>`;
+        });
+        document.getElementById('edt-body').innerHTML = html;
+    });
+}
+
+window.openSlot = async (key) => {
+    selectedSlot = key;
+    document.getElementById('modal-cours').classList.remove('hidden');
+    const snap = await get(ref(db, `edt/${key}`));
+    const c = snap.val() || { mat: "", cl: "", dev: "" };
+    
+    if(userSession.role !== 'eleve') {
+        document.getElementById('edit-mode').classList.remove('hidden');
+        document.getElementById('field-mat').value = c.mat;
+        document.getElementById('field-classe').value = c.cl;
+        document.getElementById('field-dev').value = c.dev;
+    } else {
+        document.getElementById('view-mode').classList.remove('hidden');
+        document.getElementById('display-dev').innerText = c.dev || "Aucun devoir.";
+    }
+};
+
+document.getElementById('btn-save-slot').onclick = () => {
+    set(ref(db, `edt/${selectedSlot}`), {
+        mat: document.getElementById('field-mat').value,
+        cl: document.getElementById('field-classe').value,
+        dev: document.getElementById('field-dev').value
+    });
+    closeModal();
+};
+
+// --- NAVIGATION ---
+window.changeTab = (tab) => {
+    document.getElementById('sect-edt').classList.add('hidden');
+    document.getElementById('sect-admin').classList.add('hidden');
+    document.getElementById('sect-' + tab).classList.remove('hidden');
+};
+
+window.closeModal = () => {
+    document.getElementById('modal-cours').classList.add('hidden');
+    document.getElementById('edit-mode').classList.add('hidden');
+    document.getElementById('view-mode').classList.add('hidden');
+};
+  </script>
+</body>
+</html>
